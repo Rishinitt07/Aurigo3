@@ -2614,21 +2614,265 @@
 
 
 
+// import React, { useState, useRef, useEffect } from "react";
+
+// const App = () => {
+//   const canvasRef = useRef(null);
+//   const [redDot, setRedDot] = useState({ x: 50, y: 50 });
+//   const [blueDot, setBlueDot] = useState({ x: 150, y: 150 });
+//   const [orangeDot, setOrangeDot] = useState({ x: 250, y: 250 });
+//   const [zones, setZones] = useState([]);
+//   const [temperatures, setTemperatures] = useState({ red: 0, blue: 0, orange: 0 });
+//   const [redDotTime, setRedDotTime] = useState(0);
+//   const [blueDotTime, setBlueDotTime] = useState(0);
+//   const [orangeDotTime, setOrangeDotTime] = useState(0);
+//   const maxTemperature = 100;
+//   const warningThreshold = 70; // 70°C for alert
+//   const timeThreshold = 20000; // 20 seconds in milliseconds
+
+//   const generateZonesWithHeatSources = () => {
+//     const radius = 100;
+//     const margin = 50;
+//     const positions = [
+//       { x: margin + radius, y: margin + radius },
+//       { x: window.innerWidth - radius - margin, y: margin + radius },
+//       { x: margin + radius, y: window.innerHeight - radius - margin },
+//       { x: window.innerWidth - radius - margin, y: window.innerHeight - radius - margin },
+//       { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+//     ];
+
+//     return positions.map((pos, index) => ({
+//       ...pos,
+//       radius,
+//       name: `Zone ${index + 1}`,
+//       heatSource: { x: pos.x, y: pos.y },
+//     }));
+//   };
+
+//   const calculateTemperature = (dot, heatSource) => {
+//     const distance = Math.sqrt(
+//       Math.pow(dot.x - heatSource.x, 2) + Math.pow(dot.y - heatSource.y, 2)
+//     );
+//     const maxDistance = 150;
+//     const temperature = Math.max(0, maxTemperature - (distance / maxDistance) * maxTemperature);
+//     return Math.min(maxTemperature, temperature);
+//   };
+
+//   const isDotInZone = (dot, zone) => {
+//     const distance = Math.sqrt(
+//       Math.pow(dot.x - zone.x, 2) + Math.pow(dot.y - zone.y, 2)
+//     );
+//     return distance <= zone.radius;
+//   };
+
+//   const getNearestZones = (dot) => {
+//     const sortedZones = zones
+//       .map((zone) => ({
+//         name: zone.name,
+//         distance: Math.sqrt(Math.pow(dot.x - zone.x, 2) + Math.pow(dot.y - zone.y, 2)),
+//       }))
+//       .sort((a, b) => a.distance - b.distance);
+//     return sortedZones.slice(0, 3).map((zone) => zone.name);
+//   };
+
+//   const logNearestZones = () => {
+//     const redZones = getNearestZones(redDot);
+//     const blueZones = getNearestZones(blueDot);
+//     const orangeZones = getNearestZones(orangeDot);
+
+//     console.log(`Red Dot nearest zones: ${redZones.join(", ")}`);
+//     console.log(`Blue Dot nearest zones: ${blueZones.join(", ")}`);
+//     console.log(`Orange Dot nearest zones: ${orangeZones.join(", ")}`);
+//   };
+
+//   const drawTemperaturePopup = (ctx, dot, temperature, color) => {
+//     const popupWidth = 80;
+//     const popupHeight = 30;
+//     const popupX = dot.x + 15;
+//     const popupY = dot.y - 40;
+
+//     ctx.fillStyle = "white";
+//     ctx.fillRect(popupX, popupY, popupWidth, popupHeight);
+
+//     ctx.strokeStyle = color;
+//     ctx.strokeRect(popupX, popupY, popupWidth, popupHeight);
+
+//     ctx.fillStyle = "black";
+//     ctx.font = "14px Arial";
+//     ctx.textAlign = "center";
+//     ctx.fillText(`${temperature.toFixed(1)}°C`, popupX + popupWidth / 2, popupY + popupHeight / 2 + 5);
+//   };
+
+//   useEffect(() => {
+//     const canvas = canvasRef.current;
+//     const ctx = canvas.getContext("2d");
+//     canvas.width = window.innerWidth;
+//     canvas.height = window.innerHeight;
+
+//     const draw = () => {
+//       ctx.fillStyle = "green";
+//       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+//       zones.forEach((zone) => {
+//         ctx.fillStyle = `rgba(128, 128, 128, 0.5)`;
+//         ctx.beginPath();
+//         ctx.arc(zone.x, zone.y, zone.radius, 0, 2 * Math.PI);
+//         ctx.fill();
+
+//         ctx.fillStyle = "black";
+//         ctx.beginPath();
+//         ctx.arc(zone.heatSource.x, zone.heatSource.y, 10, 0, 2 * Math.PI);
+//         ctx.fill();
+
+//         ctx.fillStyle = "black";
+//         ctx.font = "16px Arial";
+//         ctx.textAlign = "center";
+//         ctx.fillText(zone.name, zone.x, zone.y + zone.radius + 20);
+//       });
+
+//       ctx.fillStyle = "red";
+//       ctx.beginPath();
+//       ctx.arc(redDot.x, redDot.y, 10, 0, 2 * Math.PI);
+//       ctx.fill();
+
+//       drawTemperaturePopup(ctx, redDot, temperatures.red, "red");
+
+//       ctx.fillStyle = "blue";
+//       ctx.beginPath();
+//       ctx.arc(blueDot.x, blueDot.y, 10, 0, 2 * Math.PI);
+//       ctx.fill();
+
+//       drawTemperaturePopup(ctx, blueDot, temperatures.blue, "blue");
+
+//       ctx.fillStyle = "orange";
+//       ctx.beginPath();
+//       ctx.arc(orangeDot.x, orangeDot.y, 10, 0, 2 * Math.PI);
+//       ctx.fill();
+
+//       drawTemperaturePopup(ctx, orangeDot, temperatures.orange, "orange");
+//     };
+
+//     const newTemperatures = {
+//       red: 0,
+//       blue: 0,
+//       orange: 0,
+//     };
+
+//     zones.forEach((zone) => {
+//       newTemperatures.red = Math.max(
+//         newTemperatures.red,
+//         calculateTemperature(redDot, zone.heatSource)
+//       );
+//       newTemperatures.blue = Math.max(
+//         newTemperatures.blue,
+//         calculateTemperature(blueDot, zone.heatSource)
+//       );
+//       newTemperatures.orange = Math.max(
+//         newTemperatures.orange,
+//         calculateTemperature(orangeDot, zone.heatSource)
+//       );
+//     });
+
+//     setTemperatures(newTemperatures);
+
+//     draw();
+//     logNearestZones();
+
+
+//   }, [redDot, blueDot, orangeDot, zones, redDotTime, blueDotTime, orangeDotTime]);
+
+//   useEffect(() => {
+//     const initialZones = generateZonesWithHeatSources();
+//     setZones(initialZones);
+//   }, []);
+
+//   const handleKeyDown = (e) => {
+//     const speed = 5;
+
+//     switch (e.key) {
+//       case "ArrowUp":
+//         setRedDot((prev) => ({ ...prev, y: prev.y - speed }));
+//         break;
+//       case "ArrowDown":
+//         setRedDot((prev) => ({ ...prev, y: prev.y + speed }));
+//         break;
+//       case "ArrowLeft":
+//         setRedDot((prev) => ({ ...prev, x: prev.x - speed }));
+//         break;
+//       case "ArrowRight":
+//         setRedDot((prev) => ({ ...prev, x: prev.x + speed }));
+//         break;
+//       case "w":
+//       case "W":
+//         setBlueDot((prev) => ({ ...prev, y: prev.y - speed }));
+//         break;
+//       case "s":
+//       case "S":
+//         setBlueDot((prev) => ({ ...prev, y: prev.y + speed }));
+//         break;
+//       case "a":
+//       case "A":
+//         setBlueDot((prev) => ({ ...prev, x: prev.x - speed }));
+//         break;
+//       case "d":
+//       case "D":
+//         setBlueDot((prev) => ({ ...prev, x: prev.x + speed }));
+//         break;
+//       case "8":
+//         setOrangeDot((prev) => ({ ...prev, y: prev.y - speed }));
+//         break;
+//       case "2":
+//         setOrangeDot((prev) => ({ ...prev, y: prev.y + speed }));
+//         break;
+//       case "4":
+//         setOrangeDot((prev) => ({ ...prev, x: prev.x - speed }));
+//         break;
+//       case "6":
+//         setOrangeDot((prev) => ({ ...prev, x: prev.x + speed }));
+//         break;
+//       default:
+//         break;
+//     }
+//   };
+
+//   useEffect(() => {
+//     window.addEventListener("keydown", handleKeyDown);
+//     return () => {
+//       window.removeEventListener("keydown", handleKeyDown);
+//     };
+//   }, []);
+
+//   return <canvas ref={canvasRef}></canvas>;
+// };
+
+// export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useRef, useEffect } from "react";
 
 const App = () => {
   const canvasRef = useRef(null);
-  const [redDot, setRedDot] = useState({ x: 50, y: 50 });
-  const [blueDot, setBlueDot] = useState({ x: 150, y: 150 });
-  const [orangeDot, setOrangeDot] = useState({ x: 250, y: 250 });
+  const [redDot, setRedDot] = useState({ x: 50, y: 50, score: 0 });
+  const [blueDot, setBlueDot] = useState({ x: 150, y: 150, score: 0 });
+  const [orangeDot, setOrangeDot] = useState({ x: 250, y: 250, score: 0 });
   const [zones, setZones] = useState([]);
   const [temperatures, setTemperatures] = useState({ red: 0, blue: 0, orange: 0 });
-  const [redDotTime, setRedDotTime] = useState(0);
-  const [blueDotTime, setBlueDotTime] = useState(0);
-  const [orangeDotTime, setOrangeDotTime] = useState(0);
+  const [helmetOn, setHelmetOn] = useState(false); 
+  const [vestOn, setVestOn] = useState(false); 
   const maxTemperature = 100;
-  const warningThreshold = 70; // 70°C for alert
-  const timeThreshold = 20000; // 20 seconds in milliseconds
 
   const generateZonesWithHeatSources = () => {
     const radius = 100;
@@ -2778,8 +3022,7 @@ const App = () => {
     draw();
     logNearestZones();
 
-
-  }, [redDot, blueDot, orangeDot, zones, redDotTime, blueDotTime, orangeDotTime]);
+  }, [redDot, blueDot, orangeDot, zones]);
 
   useEffect(() => {
     const initialZones = generateZonesWithHeatSources();
@@ -2842,7 +3085,191 @@ const App = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef}></canvas>;
+  const updateScore = (dot, helmetState, vestState) => {
+    if (helmetState && !vestState) {
+      return dot.score + 2;
+    }
+    if (!helmetState && vestState) {
+      return dot.score + 2;
+    }
+    if (!helmetState && !vestState) {
+      return dot.score + 4;
+    }
+    return dot.score;
+  };
+
+  const handleHelmetVestToggle = (dotName) => {
+    const updatedHelmetState = !helmetOn;
+    const updatedVestState = !vestOn;
+
+    if (dotName === "red") {
+      setRedDot((prev) => ({
+        ...prev,
+        score: updateScore(prev, updatedHelmetState, updatedVestState),
+      }));
+    } else if (dotName === "blue") {
+      setBlueDot((prev) => ({
+        ...prev,
+        score: updateScore(prev, updatedHelmetState, updatedVestState),
+      }));
+    } else if (dotName === "orange") {
+      setOrangeDot((prev) => ({
+        ...prev,
+        score: updateScore(prev, updatedHelmetState, updatedVestState),
+      }));
+    }
+
+    setHelmetOn(updatedHelmetState);
+    setVestOn(updatedVestState);
+  };
+
+  return (
+    <div>
+      <canvas ref={canvasRef}></canvas>
+
+      {/* Helmet and Vest Buttons for Red Dot */}
+      <div
+        className="absolute"
+        style={{
+          position: "absolute",
+          top: redDot.y - 60,
+          left: redDot.x + 15,
+        }}
+      >
+        <button
+          className={`px-4 py-2 m-2 bg-${helmetOn ? "green" : "gray"}-500 text-white`}
+          onClick={() => handleHelmetVestToggle("red")}
+        >
+          {helmetOn ? "Helmet On" : "Helmet Off"}
+        </button>
+        <button
+          className={`px-4 py-2 m-2 bg-${vestOn ? "blue" : "gray"}-500 text-white`}
+          onClick={() => handleHelmetVestToggle("red")}
+        >
+          {vestOn ? "Vest On" : "Vest Off"}
+        </button>
+        {/* Red Dot Score */}
+        <p
+          className="absolute"
+          style={{
+            top: redDot.y + 20,
+            left: redDot.x - 10,
+            color: "black",
+            fontSize: "16px",
+          }}
+        >
+          Score: {redDot.score}
+        </p>
+        {/* Red Dot Temperature */}
+        <p
+          className="absolute"
+          style={{
+            top: redDot.y + 40,
+            left: redDot.x - 10,
+            color: "black",
+            fontSize: "16px",
+          }}
+        >
+          Temp: {temperatures.red.toFixed(1)}°C
+        </p>
+      </div>
+
+      {/* Helmet and Vest Buttons for Blue Dot */}
+      <div
+        className="absolute"
+        style={{
+          position: "absolute",
+          top: blueDot.y - 60,
+          left: blueDot.x + 15,
+        }}
+      >
+        <button
+          className={`px-4 py-2 m-2 bg-${helmetOn ? "green" : "gray"}-500 text-white`}
+          onClick={() => handleHelmetVestToggle("blue")}
+        >
+          {helmetOn ? "Helmet On" : "Helmet Off"}
+        </button>
+        <button
+          className={`px-4 py-2 m-2 bg-${vestOn ? "blue" : "gray"}-500 text-white`}
+          onClick={() => handleHelmetVestToggle("blue")}
+        >
+          {vestOn ? "Vest On" : "Vest Off"}
+        </button>
+        {/* Blue Dot Score */}
+        <p
+          className="absolute"
+          style={{
+            top: blueDot.y + 20,
+            left: blueDot.x - 10,
+            color: "black",
+            fontSize: "16px",
+          }}
+        >
+          Score: {blueDot.score}
+        </p>
+        {/* Blue Dot Temperature */}
+        <p
+          className="absolute"
+          style={{
+            top: blueDot.y + 40,
+            left: blueDot.x - 10,
+            color: "black",
+            fontSize: "16px",
+          }}
+        >
+          Temp: {temperatures.blue.toFixed(1)}°C
+        </p>
+      </div>
+
+      {/* Helmet and Vest Buttons for Orange Dot */}
+      <div
+        className="absolute"
+        style={{
+          position: "absolute",
+          top: orangeDot.y - 60,
+          left: orangeDot.x + 15,
+        }}
+      >
+        <button
+          className={`px-4 py-2 m-2 bg-${helmetOn ? "green" : "gray"}-500 text-white`}
+          onClick={() => handleHelmetVestToggle("orange")}
+        >
+          {helmetOn ? "Helmet On" : "Helmet Off"}
+        </button>
+        <button
+          className={`px-4 py-2 m-2 bg-${vestOn ? "blue" : "gray"}-500 text-white`}
+          onClick={() => handleHelmetVestToggle("orange")}
+        >
+          {vestOn ? "Vest On" : "Vest Off"}
+        </button>
+        {/* Orange Dot Score */}
+        <p
+          className="absolute"
+          style={{
+            top: orangeDot.y + 20,
+            left: orangeDot.x - 10,
+            color: "black",
+            fontSize: "16px",
+          }}
+        >
+          Score: {orangeDot.score}
+        </p>
+        {/* Orange Dot Temperature */}
+        <p
+          className="absolute"
+          style={{
+            top: orangeDot.y + 40,
+            left: orangeDot.x - 10,
+            color: "black",
+            fontSize: "16px",
+          }}
+        >
+          Temp: {temperatures.orange.toFixed(1)}°C
+        </p>
+      </div>
+    </div>
+  );
 };
 
 export default App;
+
